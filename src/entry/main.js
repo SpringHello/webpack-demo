@@ -3,7 +3,7 @@ import {mat4} from 'gl-matrix'
 main();
 
 function main () {
-  const canvas = document.querySelector('#canvas');
+  const canvas = document.querySelector('#glcanvas');
   const gl = canvas.getContext('webgl');
 
 
@@ -47,8 +47,8 @@ function main () {
     0.0, 0.0, 0.0
   ]
   for (let i = 0; i <= 360; i += 1) {
-    let y = Math.sin(i * 2 * Math.PI / 360) * (i / 360)
-    let x = Math.cos(i * 2 * Math.PI / 360) * (i / 360)
+    let y = Math.sin(i * 2 * Math.PI / 360)
+    let x = Math.cos(i * 2 * Math.PI / 360)
     vertex.push(x, y, 0.0)
   }
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
