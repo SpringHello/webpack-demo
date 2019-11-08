@@ -1,4 +1,4 @@
-import {mat4} from 'gl-matrix'
+import {mat4, vec3} from 'gl-matrix'
 
 main();
 
@@ -16,8 +16,9 @@ function main () {
 
   const vsSource = `
     attribute vec4 position;
+    uniform mat4 transform;
     void main() {
-      gl_Position = position;
+      gl_Position = position * transform;
     }
   `;
 
@@ -52,9 +53,14 @@ function main () {
     vertex.push(x, y, 0.0)
   }
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
-
   let position = gl.getAttribLocation(shaderProgram, 'position')
   gl.enableVertexAttribArray(position)
+
+  let s = mat4.create();
+  mat4.translate(s, s, vec3.fromValues(0.5, 0.0, 0.0))
+  let transform = gl.getUniformLocation(shaderProgram, 'transform')
+  gl.uniformMatrix4fv(transform, false, s);
+
   gl.vertexAttribPointer(position, 3, gl.FLOAT, false, 12, 0)
   gl.clearColor(0.0, 0.0, 0.0, 1.0)
   gl.clear(gl.COLOR_BUFFER_BIT)
