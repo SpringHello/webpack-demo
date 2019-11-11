@@ -1,4 +1,3 @@
-//  绘制一个球
 import {mat4, vec3} from 'gl-matrix'
 
 main();
@@ -44,6 +43,27 @@ function main () {
     1.0, 0.0, 0.0,
     0.0, 0.0, 0.0
   ]*/
+
+  //  圆形
+  let vertex = [
+    0.0, 0.0, 0.0
+  ]
+  for (let i = 0; i <= 360; i += 1) {
+    let y = Math.sin(i * Math.PI / 180)
+    let x = Math.cos(i * Math.PI / 180)
+    vertex.push(x, y, 0.0)
+  }
+  console.log(vertex)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
+  let vertexPosition = gl.getAttribLocation(shaderProgram, 'aVertexPosition')
+  gl.enableVertexAttribArray(vertexPosition)
+  //  模型视图矩阵
+  let uModelViewMatrix = mat4.create();
+  mat4.translate(uModelViewMatrix, uModelViewMatrix, vec3.fromValues(0.0, 0.0, -6.0))
+  //mat4.scale(s, s, vec3.fromValues(1.0, 0.5, 0.5));
+  let ModelViewMatrixLocation = gl.getUniformLocation(shaderProgram, 'uModelViewMatrix')
+  gl.uniformMatrix4fv(ModelViewMatrixLocation, false, uModelViewMatrix);
+
   //  投影矩阵
   let projectionMatrix = mat4.create()
   let fieldOfView = 45 * Math.PI / 180
@@ -54,71 +74,10 @@ function main () {
   let projectionMatrixLocation = gl.getUniformLocation(shaderProgram, 'uProjectionMatrix')
   gl.uniformMatrix4fv(projectionMatrixLocation, false, projectionMatrix);
 
-
-  //  模型视图矩阵
-  let uModelViewMatrix = mat4.create();
-  mat4.translate(uModelViewMatrix, uModelViewMatrix, vec3.fromValues(0.0, 0.0, -6.0))
-  //mat4.scale(s, s, vec3.fromValues(1.0, 0.5, 0.5));
-  let ModelViewMatrixLocation = gl.getUniformLocation(shaderProgram, 'uModelViewMatrix')
-  gl.uniformMatrix4fv(ModelViewMatrixLocation, false, uModelViewMatrix);
-
-  //  清屏
+  gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 12, 0);
   gl.clearColor(0.0, 0.0, 0.0, 1.0)
   gl.clear(gl.COLOR_BUFFER_BIT)
-
-  //  球的两个顶点之一（背面）
-  let vertex = [0.0, 0.0, -1.0]
-  for (let j = -89; j < -88; j++) {
-    let z = Math.sin(j * Math.PI / 180)
-    for (let i = 0; i <= 360; i += 1) {
-      let y = Math.sqrt(1 - z * z) * Math.sin(i * Math.PI / 180)
-      let x = Math.sqrt(1 - z * z) * Math.cos(i * Math.PI / 180)
-      vertex.push(x, y, z)
-    }
-  }
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
-  let vertexPosition = gl.getAttribLocation(shaderProgram, 'aVertexPosition')
-  gl.enableVertexAttribArray(vertexPosition)
-  gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 12, 0);
   gl.drawArrays(gl.TRIANGLE_FAN, 0, vertex.length);
-
-
-  //  球的两个顶点之一（正面）
-  vertex = [0.0, 0.0, 1.0]
-  for (let j = 89; j < 90; j++) {
-    let z = Math.sin(j * Math.PI / 180)
-    for (let i = 0; i <= 360; i += 1) {
-      let y = Math.sqrt(1 - z * z) * Math.sin(i * Math.PI / 180)
-      let x = Math.sqrt(1 - z * z) * Math.cos(i * Math.PI / 180)
-      vertex.push(x, y, z)
-    }
-  }
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
-  vertexPosition = gl.getAttribLocation(shaderProgram, 'aVertexPosition')
-  gl.enableVertexAttribArray(vertexPosition)
-  gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 12, 0);
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, vertex.length);
-
-
-  //  绘制球体
-  vertex = []
-  for (let j = -89; j < 89; j += 15) {
-    for (let i = 0; i <= 360; i += 15) {
-      let z = Math.sin(j * Math.PI / 180)
-      let y = Math.sqrt(1 - z * z) * Math.sin(i * Math.PI / 180)
-      let x = Math.sqrt(1 - z * z) * Math.cos(i * Math.PI / 180)
-      vertex.push(x, y, z)
-      z = Math.sin((j + 15) * Math.PI / 180)
-      y = Math.sqrt(1 - z * z) * Math.sin(i * Math.PI / 180)
-      x = Math.sqrt(1 - z * z) * Math.cos(i * Math.PI / 180)
-      vertex.push(x, y, z)
-    }
-  }
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
-  vertexPosition = gl.getAttribLocation(shaderProgram, 'aVertexPosition')
-  gl.enableVertexAttribArray(vertexPosition)
-  gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 12, 0);
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertex.length);
 }
 
 
