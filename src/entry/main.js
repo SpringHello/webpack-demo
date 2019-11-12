@@ -1,166 +1,56 @@
-//  绘制一个球
-import {mat4, vec3} from 'gl-matrix'
+import {mat4} from 'gl-matrix'
 
-main();
+let gl = document.getElementById('glcanvas').getContext('webgl')
 
-function main () {
-  const canvas = document.querySelector('#glcanvas');
-  const gl = canvas.getContext('webgl');
+let program = initProgram(gl)
+gl.useProgram(program)
 
-
-  if (!gl) {
-    alert('Unable to initialize WebGL. Your browser or machine may not support it.');
-    return;
-  }
-
-  // Vertex shader program
-
-  const vsSource = `
-    attribute vec4 aVertexPosition;
-    uniform mat4 uModelViewMatrix;
-    uniform mat4 uProjectionMatrix;
-    void main() {
-      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-    }
-  `;
-
-  // Fragment shader program
-
-  const fsSource = `
-    void main() {
-      gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
-    }
-  `;
-  const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
-  gl.useProgram(shaderProgram)
-
-  //  顶点数据放入缓存
-  let buffer = gl.createBuffer()
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-  //  四边形
-  /*let vertex = [
-    1.0, 1.0, 0.0,
-    0.0, 1.0, 0.0,
-    1.0, 0.0, 0.0,
-    0.0, 0.0, 0.0
-  ]*/
-  //  投影矩阵
-  let projectionMatrix = mat4.create()
-  let fieldOfView = 45 * Math.PI / 180
-  let aspect = 1.0
-  const zNear = 1.0
-  const zFar = 100.0
-  mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar)
-  let projectionMatrixLocation = gl.getUniformLocation(shaderProgram, 'uProjectionMatrix')
-  gl.uniformMatrix4fv(projectionMatrixLocation, false, projectionMatrix);
-
-
-  //  模型视图矩阵
-  let uModelViewMatrix = mat4.create();
-  mat4.translate(uModelViewMatrix, uModelViewMatrix, vec3.fromValues(0.0, 0.0, -6.0))
-  //mat4.scale(s, s, vec3.fromValues(1.0, 0.5, 0.5));
-  let ModelViewMatrixLocation = gl.getUniformLocation(shaderProgram, 'uModelViewMatrix')
-  gl.uniformMatrix4fv(ModelViewMatrixLocation, false, uModelViewMatrix);
-
-  //  清屏
-  gl.clearColor(0.0, 0.0, 0.0, 1.0)
-  gl.clear(gl.COLOR_BUFFER_BIT)
-
-  //  球的两个顶点之一（背面）
-  let vertex = [0.0, 0.0, -1.0]
-  for (let j = -89; j < -88; j++) {
-    let z = Math.sin(j * Math.PI / 180)
-    for (let i = 0; i <= 360; i += 1) {
-      let y = Math.sqrt(1 - z * z) * Math.sin(i * Math.PI / 180)
-      let x = Math.sqrt(1 - z * z) * Math.cos(i * Math.PI / 180)
-      vertex.push(x, y, z)
-    }
-  }
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
-  let vertexPosition = gl.getAttribLocation(shaderProgram, 'aVertexPosition')
-  gl.enableVertexAttribArray(vertexPosition)
-  gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 12, 0);
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, vertex.length);
-
-
-  //  球的两个顶点之一（正面）
-  vertex = [0.0, 0.0, 1.0]
-  for (let j = 89; j < 90; j++) {
-    let z = Math.sin(j * Math.PI / 180)
-    for (let i = 0; i <= 360; i += 1) {
-      let y = Math.sqrt(1 - z * z) * Math.sin(i * Math.PI / 180)
-      let x = Math.sqrt(1 - z * z) * Math.cos(i * Math.PI / 180)
-      vertex.push(x, y, z)
-    }
-  }
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
-  vertexPosition = gl.getAttribLocation(shaderProgram, 'aVertexPosition')
-  gl.enableVertexAttribArray(vertexPosition)
-  gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 12, 0);
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, vertex.length);
-
-
-  //  绘制球体
-  vertex = []
-  for (let j = -89; j < 89; j += 15) {
-    for (let i = 0; i <= 360; i += 15) {
-      let z = Math.sin(j * Math.PI / 180)
-      let y = Math.sqrt(1 - z * z) * Math.sin(i * Math.PI / 180)
-      let x = Math.sqrt(1 - z * z) * Math.cos(i * Math.PI / 180)
-      vertex.push(x, y, z)
-      z = Math.sin((j + 15) * Math.PI / 180)
-      y = Math.sqrt(1 - z * z) * Math.sin(i * Math.PI / 180)
-      x = Math.sqrt(1 - z * z) * Math.cos(i * Math.PI / 180)
-      vertex.push(x, y, z)
-    }
-  }
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
-  vertexPosition = gl.getAttribLocation(shaderProgram, 'aVertexPosition')
-  gl.enableVertexAttribArray(vertexPosition)
-  gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 12, 0);
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertex.length);
+let positionBuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+let position = []
+for (let i = 0; i <= 360; i += 15) {
+  let y = Math.sin(i * Math.PI / 180)
+  let x = Math.cos(i * Math.PI / 180)
+  position.push(x, y, 0)
 }
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW)
 
+let positionLocation = gl.getAttribLocation(program, 'position')
+gl.enableVertexAttribArray(positionLocation)
+gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 12, 0);
+gl.clearColor(0.0, 0.0, 0.0, 1.0)
+gl.clear(gl.COLOR_BUFFER_BIT)
+gl.drawArrays(gl.TRIANGLE_FAN, 0, position.length)
 
-function initShaderProgram (gl, vsSource, fsSource) {
-  const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-  const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+function initProgram (gl) {
+  const vs = `
+    attribute vec4 position;
+    void main(){
+      gl_Position = position;
+    }
+  `
+  const fs = `
+    void main(){
+      gl_FragColor = vec4(1.0,1.0,1.0,1.0);
+    }
+  `
+  let vertexShader = gl.createShader(gl.VERTEX_SHADER)
+  gl.shaderSource(vertexShader, vs)
+  gl.compileShader(vertexShader)
 
-  // Create the shader program
-
-  const shaderProgram = gl.createProgram();
-  gl.attachShader(shaderProgram, vertexShader);
-  gl.attachShader(shaderProgram, fragmentShader);
-  gl.linkProgram(shaderProgram);
-
-  // If creating the shader program failed, alert
-
-  if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-    console.log('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
-    return null;
+  let fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
+  gl.shaderSource(fragmentShader, fs)
+  gl.compileShader(fragmentShader)
+  if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+    console.log(gl.getShaderInfoLog(fragmentShader));
   }
-
-  return shaderProgram;
-}
-
-function loadShader (gl, type, source) {
-  const shader = gl.createShader(type);
-
-  // Send the source to the shader object
-
-  gl.shaderSource(shader, source);
-
-  // Compile the shader program
-
-  gl.compileShader(shader);
-
-  // See if it compiled successfully
-
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.log('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
-    gl.deleteShader(shader);
-    return null;
+  if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+    console.log(gl.getShaderInfoLog(vertexShader));
   }
+  let program = gl.createProgram()
+  gl.attachShader(program, vertexShader)
+  gl.attachShader(program, fragmentShader)
+  gl.linkProgram(program)
 
-  return shader;
+  return program
 }
