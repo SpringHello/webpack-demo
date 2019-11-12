@@ -21,7 +21,7 @@ gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 12, 0);
 gl.clearColor(0.0, 0.0, 0.0, 1.0)
 gl.clear(gl.COLOR_BUFFER_BIT)
 gl.drawArrays(gl.TRIANGLE_FAN, 0, position.length)
-
+ 
 function initProgram (gl) {
   const vs = `
     attribute vec4 position;
