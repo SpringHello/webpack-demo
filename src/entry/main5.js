@@ -23,7 +23,7 @@ console.log(position)
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW)
 let positionLocation = gl.getAttribLocation(program, 'position')
 gl.enableVertexAttribArray(positionLocation)
-gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 12, 0);
 
 //  颜色
 let colorBuffer = gl.createBuffer()
@@ -31,7 +31,7 @@ gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(color), gl.STATIC_DRAW)
 let colorLocation = gl.getAttribLocation(program, 'color')
 gl.enableVertexAttribArray(colorLocation)
-gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
+gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 12, 0);
 
 //相机
 let projection = mat4.create();
