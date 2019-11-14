@@ -17,7 +17,7 @@ for (let i = 0; i <= 360; i += 45) {
   let x = Math.cos(i * 2 * Math.PI / 360)
   vertex.push(x, y, 0.0, 1)
   color.push(x, y, 0.0, 1.0)
-}  
+} 
 let buffer = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
