@@ -8,19 +8,30 @@ gl.useProgram(program)
 gl.clearColor(0.0, 0.0, 0.0, 1.0)
 gl.clear(gl.COLOR_BUFFER_BIT)
 
-let vertex = [
-  0.0, 0.0, -1, 1
-]
+let positionBuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
 let color = [1.0, 1.0, 1.0, 1.0]
-for (let i = 0; i <= 360; i += 45) {
+let z = Math.sin(-75 * Math.PI / 180)
+let position = [0.0, 0.0, -1]
+for (let i = 0; i <= 360; i += 60) {
+  let y = Math.sqrt(1 - z * z) * Math.sin(i * Math.PI / 180)
+  let x = Math.sqrt(1 - z * z) * Math.cos(i * Math.PI / 180)
+  position.push(x, y, z)
+  color.push(x, y, 0.0, 1.0)
+}
+
+let vertex = [
+  0.0, 0.0, 0.0, 1
+]
+color = [1.0, 1.0, 1.0, 1.0]
+for (let i = 0; i <= 360; i += 60) {
   let y = Math.sin(i * 2 * Math.PI / 360)
   let x = Math.cos(i * 2 * Math.PI / 360)
   vertex.push(x, y, 0.0, 1)
   color.push(x, y, 0.0, 1.0)
 }
-let buffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
+console.log(vertex, position)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW)
 let positionLocation = gl.getAttribLocation(program, 'position')
 gl.enableVertexAttribArray(positionLocation)
 gl.vertexAttribPointer(positionLocation, 4, gl.FLOAT, false, 0, 0);
@@ -31,7 +42,7 @@ gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(color), gl.STATIC_DRAW)
 let colorLocation = gl.getAttribLocation(program, 'color')
 gl.enableVertexAttribArray(colorLocation)
-gl.vertexAttribPointer(colorLocation, 4, gl.FLOAT, false, 0, 0);
+gl.vertexAttribPointer(colorLocation, 4, gl.FLOAT, false, 12, 0);
 
 //相机
 let projection = mat4.create();
@@ -50,7 +61,7 @@ mat4.translate(modelView, modelView, vec3.fromValues(3, 3, -10))
 let modelViewLocation = gl.getUniformLocation(program, 'modelView')
 gl.uniformMatrix4fv(modelViewLocation, false, modelView)
 
-gl.drawArrays(gl.TRIANGLE_FAN, 0, vertex.length)
+gl.drawArrays(gl.TRIANGLE_FAN, 0, position.length)
 
 
 //modelView
