@@ -4,27 +4,48 @@ let gl = document.getElementById('glcanvas').getContext('webgl')
 
 let program = initProgram(gl)
 gl.useProgram(program)
-
-gl.clearColor(0.0, 0.0, 0.0, 1.0)
-gl.clear(gl.COLOR_BUFFER_BIT)
-
-let vertex = [
+let colorList = [[0, 1, 0, 1], [0, 1, 0, 1], [0, 1, 0, 1]]
+let count = 0
+let step = 30
+let front = [
   0.0, 0.0, -1, 1
 ]
+let back = [
+  0.0, 0.0, 1, 1
+]
+let qiu = []
+let qiuColor = []
+//每一角度的弧度数
+let radianPerAngle = Math.PI / 180
 let color = [1.0, 1.0, 1.0, 1.0]
-for (let i = 0; i <= 360; i += 45) {
-  let y = Math.sin(i * 2 * Math.PI / 360)
-  let x = Math.cos(i * 2 * Math.PI / 360)
-  vertex.push(x, y, 0.0, 1)
-  color.push(x, y, 0.0, 1.0)
-} 
-let buffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
-let positionLocation = gl.getAttribLocation(program, 'position')
-gl.enableVertexAttribArray(positionLocation)
-gl.vertexAttribPointer(positionLocation, 4, gl.FLOAT, false, 0, 0);
+//for(let i=180)
+let frontZ = Math.cos(step * radianPerAngle)
+let backZ = -frontZ
+let length = Math.abs(Math.sin(step * radianPerAngle))
+for (let i = 0; i <= 360; i += step) {
+  let y = Math.sin(i * radianPerAngle) * length
+  let x = Math.cos(i * radianPerAngle) * length
+  front.push(x, y, frontZ, 1)
+  back.push(x, y, backZ, 1)
+  color.push(...colorList[count++ % 3])
+}
 
+for (let i = 180 - step; i > step; i -= step) {
+  let z = Math.cos(i * radianPerAngle)
+  let preZ = Math.cos((i + step) * radianPerAngle)
+  let length = Math.abs(Math.sin(i * radianPerAngle))
+  let preLength = Math.abs(Math.sin((i + step) * radianPerAngle))
+  for (let j = 0; j <= 360; j += step) {
+    let x = Math.cos(j * radianPerAngle) * length
+    let y = Math.sin(j * radianPerAngle) * length
+    let preX = Math.cos(j * radianPerAngle) * preLength
+    let preY = Math.sin(j * radianPerAngle) * preLength
+    qiu.push(x, y, z, 1)
+    qiuColor.push(...colorList[count++ % 3])
+    qiu.push(preX, preY, preZ, 1)
+    qiuColor.push(...colorList[count++ % 3])
+  }
+}
 //  颜色
 let colorBuffer = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
@@ -45,22 +66,45 @@ gl.uniformMatrix4fv(projectionMatrixLocation, false, projection);
 
 //modelView
 let modelView = mat4.create()
-mat4.translate(modelView, modelView, vec3.fromValues(3, 3, -10))
-//mat4.rotateY(modelView, modelView, 90 * Math.PI / 180)
+mat4.translate(modelView, modelView, vec3.fromValues(0, 0, -10))
+mat4.rotateY(modelView, modelView, 10 * Math.PI / 180)
 let modelViewLocation = gl.getUniformLocation(program, 'modelView')
 gl.uniformMatrix4fv(modelViewLocation, false, modelView)
 
-gl.drawArrays(gl.TRIANGLE_FAN, 0, vertex.length)
+gl.enable(gl.DEPTH_TEST)
+gl.clearColor(0.0, 0.0, 0.0, 1.0)
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+//圆背面
+let buffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(front), gl.STATIC_DRAW)
+let positionLocation = gl.getAttribLocation(program, 'position')
+gl.enableVertexAttribArray(positionLocation)
+gl.vertexAttribPointer(positionLocation, 4, gl.FLOAT, false, 0, 0);
+gl.drawArrays(gl.TRIANGLE_FAN, 0, front.length)
+
+buffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(back), gl.STATIC_DRAW)
+gl.enableVertexAttribArray(positionLocation)
+gl.vertexAttribPointer(positionLocation, 4, gl.FLOAT, false, 0, 0);
+gl.drawArrays(gl.TRIANGLE_FAN, 0, back.length)
 
 
-//modelView
-/*let modelView1 = mat4.create()
-mat4.translate(modelView1, modelView1, vec3.fromValues(0, 0, -6))
-mat4.rotateY(modelView1, modelView1, 180 * Math.PI / 180)
-let modelViewLocation1 = gl.getUniformLocation(program, 'modelView')
-gl.uniformMatrix4fv(modelViewLocation1, false, modelView1)
+colorBuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(qiuColor), gl.STATIC_DRAW)
+colorLocation = gl.getAttribLocation(program, 'color')
+gl.enableVertexAttribArray(colorLocation)
+gl.vertexAttribPointer(colorLocation, 4, gl.FLOAT, false, 0, 0);
 
-gl.drawArrays(gl.TRIANGLE_FAN, 0, position.length)*/
+buffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(qiu), gl.STATIC_DRAW)
+gl.enableVertexAttribArray(positionLocation)
+gl.vertexAttribPointer(positionLocation, 4, gl.FLOAT, false, 0, 0);
+gl.drawArrays(gl.TRIANGLE_STRIP, 0, qiu.length)
 
 function initProgram (gl) {
   const vs = `
