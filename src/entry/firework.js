@@ -1,28 +1,26 @@
-const c = document.getElementById('c')
-let gl = c.getContext('webgl', {
-    preserveDrawingBuffer: true
-  }),
-  w = c.width = window.innerWidth,
-  h = c.height = window.innerHeight
+var gl = c.getContext('webgl', {preserveDrawingBuffer: true})
+  , w = c.width = window.innerWidth
+  , h = c.height = window.innerHeight
 
-  , webgl = {}, opts = {
-    projectileAlpha: .8,
-    projectileLineWidth: 1.3,
-    fireworkAngleSpan: .5,
-    baseFireworkVel: 3,
-    addedFireworkVel: 3,
-    gravity: .03,
-    lowVelBoundary: -.2,
-    xFriction: .995,
-    baseShardVel: 1,
-    addedShardVel: .2,
-    fireworks: 50,
-    baseShardsParFirework: 10,
-    addedShardsParFirework: 10,
-    shardFireworkVelMultiplier: .3,
-    initHueMultiplier: 1 / 360,
-    runHueAdder: .1 / 360
-  }
+  , webgl = {}
+  , opts = {
+  projectileAlpha: .8,
+  projectileLineWidth: 1.3,
+  fireworkAngleSpan: .5,
+  baseFireworkVel: 3,
+  addedFireworkVel: 3,
+  gravity: .03,
+  lowVelBoundary: -.2,
+  xFriction: .995,
+  baseShardVel: 1,
+  addedShardVel: .2,
+  fireworks: 100,
+  baseShardsParFirework: 10,
+  addedShardsParFirework: 10,
+  shardFireworkVelMultiplier: .3,
+  initHueMultiplier: 1 / 360,
+  runHueAdder: .1 / 360
+}
 
 webgl.vertexShaderSource = `
 uniform int u_mode;
@@ -95,9 +93,12 @@ webgl.data = [];
 webgl.clear = function () {
 
   gl.uniform1i(webgl.modeUniformLoc, 1);
-  let a = .1;
-  webgl.data = [-1, -1, 0, a,
-    1, -1, 0, a, -1, 1, 0, a, -1, 1, 0, a,
+  var a = .1;
+  webgl.data = [
+    -1, -1, 0, a,
+    1, -1, 0, a,
+    -1, 1, 0, a,
+    -1, 1, 0, a,
     1, -1, 0, a,
     1, 1, 0, a
   ];
@@ -111,14 +112,14 @@ webgl.draw = function (glType) {
   gl.drawArrays(glType, 0, webgl.data.length / 4);
 }
 
-let fireworks = [],
-  tick = 0,
-  sins = [],
-  coss = [],
-  maxShardsParFirework = opts.baseShardsParFirework + opts.addedShardsParFirework,
-  tau = 6.283185307179586476925286766559;
+var fireworks = []
+  , tick = 0
+  , sins = []
+  , coss = []
+  , maxShardsParFirework = opts.baseShardsParFirework + opts.addedShardsParFirework
+  , tau = 6.283185307179586476925286766559;
 
-for (let i = 0; i < maxShardsParFirework; ++i) {
+for (var i = 0; i < maxShardsParFirework; ++i) {
   sins[i] = Math.sin(tau * i / maxShardsParFirework);
   coss[i] = Math.cos(tau * i / maxShardsParFirework);
 }
@@ -126,14 +127,14 @@ for (let i = 0; i < maxShardsParFirework; ++i) {
 function Firework () {
   this.reset();
   this.shards = [];
-  for (let i = 0; i < maxShardsParFirework; ++i)
+  for (var i = 0; i < maxShardsParFirework; ++i)
     this.shards.push(new Shard(this));
 }
 
 Firework.prototype.reset = function () {
 
-  let angle = -Math.PI / 2 + (Math.random() - .5) * opts.fireworkAngleSpan,
-    vel = opts.baseFireworkVel + opts.addedFireworkVel * Math.random();
+  var angle = -Math.PI / 2 + (Math.random() - .5) * opts.fireworkAngleSpan
+    , vel = opts.baseFireworkVel + opts.addedFireworkVel * Math.random();
 
   this.mode = 0;
   this.vx = vel * Math.cos(angle);
@@ -149,9 +150,9 @@ Firework.prototype.step = function () {
 
   if (this.mode === 0) {
 
-    let ph = this.hue,
-      px = this.x,
-      py = this.y;
+    var ph = this.hue
+      , px = this.x
+      , py = this.y;
 
     this.hue += opts.runHueAdder;
 
@@ -159,25 +160,25 @@ Firework.prototype.step = function () {
     this.y += this.vy += opts.gravity;
 
     webgl.data.push(
-      px, py, ph, opts.projectileAlpha * 0.9,
-      this.x, this.y, this.hue, opts.projectileAlpha * 0.9);
+      px, py, ph, opts.projectileAlpha * .2,
+      this.x, this.y, this.hue, opts.projectileAlpha * .2);
 
     if (this.vy >= opts.lowVelBoundary) {
       this.mode = 1;
 
       this.shardAmount = opts.baseShardsParFirework + opts.addedShardsParFirework * Math.random() | 0;
 
-      let baseAngle = Math.random() * tau,
-        x = Math.cos(baseAngle),
-        y = Math.sin(baseAngle),
-        sin = sins[this.shardAmount],
-        cos = coss[this.shardAmount];
+      var baseAngle = Math.random() * tau
+        , x = Math.cos(baseAngle)
+        , y = Math.sin(baseAngle)
+        , sin = sins[this.shardAmount]
+        , cos = coss[this.shardAmount];
 
-      for (let i = 0; i < this.shardAmount; ++i) {
+      for (var i = 0; i < this.shardAmount; ++i) {
 
-        let vel = opts.baseShardVel + opts.addedShardVel * Math.random();
+        var vel = opts.baseShardVel + opts.addedShardVel * Math.random();
         this.shards[i].reset(x * vel, y * vel)
-        let X = x;
+        var X = x;
         x = x * cos - y * sin;
         y = y * cos + X * sin;
       }
@@ -188,9 +189,9 @@ Firework.prototype.step = function () {
     this.ph = this.hue
     this.hue += opts.runHueAdder;
 
-    let allDead = true;
-    for (let i = 0; i < this.shardAmount; ++i) {
-      let shard = this.shards[i];
+    var allDead = true;
+    for (var i = 0; i < this.shardAmount; ++i) {
+      var shard = this.shards[i];
       if (!shard.dead) {
         shard.step();
         allDead = false;
@@ -220,13 +221,13 @@ Shard.prototype.step = function () {
 
   this.tick += .05;
 
-  let px = this.x,
-    py = this.y;
+  var px = this.x
+    , py = this.y;
 
   this.x += this.vx *= opts.xFriction;
   this.y += this.vy += opts.gravity;
 
-  let proportion = 1 - (this.y - this.starty) / (h - this.starty);
+  var proportion = 1 - (this.y - this.starty) / (h - this.starty);
 
   webgl.data.push(
     px, py, this.parent.ph, opts.projectileAlpha / this.tick,
@@ -265,7 +266,7 @@ window.addEventListener('resize', function () {
   gl.uniform2f(webgl.resUniformLoc, w, h);
 })
 window.addEventListener('click', function (e) {
-  let firework = new Firework();
+  var firework = new Firework();
   firework.x = e.clientX;
   firework.y = e.clientY;
   firework.vx = 0;
