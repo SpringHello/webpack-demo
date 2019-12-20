@@ -1,14 +1,17 @@
+import {mat4, vec3} from 'gl-matrix'
+
 const gl = document.getElementById('webgl').getContext('webgl')
 
 function initProgram (gl) {
   const vertexSource = `
     attribute vec4 vPosition;
     attribute vec4 aVertexColor;
+    uniform mat4 uModelViewMatrix;
     varying lowp vec4 vColor;
     void main(){
       gl_Position = vPosition;
       gl_PointSize = 1.0;
-      vColor = aVertexColor;
+      vColor = uModelViewMatrix * aVertexColor;
     }
   `
   const fragmentSource = `
@@ -47,16 +50,16 @@ const program = initProgram(gl)
 gl.useProgram(program)
 
 let color = [
-  0.1, 0, 0, 1,
-  0.2, 0, 0, 1,
-  0.3, 0, 0, 1,
-  0.4, 0, 0, 1,
-  0.5, 0, 0, 1,
-  0.6, 0, 0, 1,
-  0.7, 0, 0, 1,
-  0.8, 0, 0, 1,
-  0.9, 0, 0, 1,
-  1, 0, 0, 1
+  0.1, 0.1, 0, 1,
+  0.2, 0.2, 0, 1,
+  0.3, 0.3, 0, 1,
+  0.4, 0.4, 0, 1,
+  0.5, 0.5, 0, 1,
+  0.6, 0.5, 0, 1,
+  0.7, 0.7, 0, 1,
+  0.8, 0.8, 0, 1,
+  0.9, 0.9, 0, 1,
+  1, 1, 0, 1
 ]
 //  颜色
 let colorBuffer = gl.createBuffer()
@@ -88,6 +91,7 @@ gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0)
 
 
 let step = 0.01
+let ModelViewMatrixLocation = gl.getUniformLocation(program, 'uModelViewMatrix')
 
 function render () {
   let linePoints = []
@@ -95,9 +99,13 @@ function render () {
   //  曲线方程
   //  x = u,y = 2u,z=3u
   for (let i = step; i < step + 0.1; i += 0.01) {
-    linePoints.push(i * i * 0.5, i, 0)
+    linePoints.push(i * i * 0.9, i, 0)
   }
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(linePoints), gl.STATIC_DRAW)
+  let s = mat4.create();
+  mat4.scale(s, s, vec3.fromValues(Math.sqrt(1 - step), Math.sqrt(1 - step), 0));
+
+  gl.uniformMatrix4fv(ModelViewMatrixLocation, false, s);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(linePoints), gl.DYNAMIC_DRAW)
   gl.clear(gl.COLOR_BUFFER_BIT)
   gl.drawArrays(gl.LINE_STRIP, 0, linePoints.length / 3)
   step += 0.015
