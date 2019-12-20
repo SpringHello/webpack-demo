@@ -3,19 +3,15 @@ const gl = document.getElementById('webgl').getContext('webgl')
 function initProgram (gl) {
   const vertexSource = `
     attribute vec4 vPosition;
-    attribute vec4 aVertexColor;
-    varying lowp vec4 vColor;
     void main(){
       gl_Position = vPosition;
       gl_PointSize = 1.0;
-      vColor = aVertexColor;
     }
   `
   const fragmentSource = `
-    varying lowp vec4 vColor;
     precision mediump float;
     void main(){
-      gl_FragColor = vColor;
+      gl_FragColor = vec4(1,0,0,1);
     }
   `
   const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vertexSource)
@@ -46,26 +42,6 @@ const program = initProgram(gl)
 
 gl.useProgram(program)
 
-let color = [
-  0.1, 0, 0, 1,
-  0.2, 0, 0, 1,
-  0.3, 0, 0, 1,
-  0.4, 0, 0, 1,
-  0.5, 0, 0, 1,
-  0.6, 0, 0, 1,
-  0.7, 0, 0, 1,
-  0.8, 0, 0, 1,
-  0.9, 0, 0, 1,
-  1, 0, 0, 1
-]
-//  颜色
-let colorBuffer = gl.createBuffer()
-gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(color), gl.STATIC_DRAW)
-const aVertexColor = gl.getAttribLocation(program, 'aVertexColor')
-gl.enableVertexAttribArray(aVertexColor)
-gl.vertexAttribPointer(aVertexColor, 4, gl.FLOAT, false, 0, 0);
-
 // createBuffer函数创建一个缓冲区对象并返回到buffer标识符（GPU中创建buffer）
 let buffer = gl.createBuffer()
 //  ARRAY_BUFFER表示缓冲区的数据是顶点属性数据，通过上面的绑定，标识符为buffer的缓冲区为当前缓冲区。
@@ -73,9 +49,34 @@ let buffer = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
 
 const vPosition = gl.getAttribLocation(program, 'vPosition')
+const initPoints = [
+  [-1, -1],
+  [0, 1],
+  [1, -1]
+]
+const vertex = [0, 0]
 
+function mix (inner, point) {
+  return [(inner[0] + point[0]) / 2, (inner[1] + point[1]) / 2]
+}
 
-gl.clearColor(0, 0, 0, 1.0)
+for (let i = 0; i < 50000; i++) {
+  //  index可能值是0，1，2
+  let index = Math.floor(Math.random() * 3)
+  let point = mix([vertex[vertex.length - 2], vertex[vertex.length - 1]], initPoints[index])
+  vertex.push(...point)
+}
+
+const linePoints = []
+//  曲线方程
+//  x = u,y = 2u,z=3u
+let u = 0.01
+for (let i = 0; i < 100; i++) {
+  linePoints.push(u * u * 0.9, u, -1)
+  u += 0.01
+}
+gl.clearColor(1.0, 1.0, 1.0, 1.0)
+gl.clear(gl.COLOR_BUFFER_BIT)
 
 //  开启着色器中的顶点属性
 gl.enableVertexAttribArray(vPosition)
@@ -84,27 +85,7 @@ gl.enableVertexAttribArray(vPosition)
 //  不使用归一化到（0.0，1.0）
 //  第五个参数说明数组中的值是连续的
 //  最后一个参数说明缓冲区中数据的起始位置
-gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0)
+gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0)
 
-
-let step = 0.01
-
-function render () {
-  let linePoints = []
-
-  //  曲线方程
-  //  x = u,y = 2u,z=3u
-  for (let i = step; i < step + 0.1; i += 0.01) {
-    linePoints.push(i * i * 0.5, i, 0)
-  }
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(linePoints), gl.STATIC_DRAW)
-  gl.clear(gl.COLOR_BUFFER_BIT)
-  gl.drawArrays(gl.LINE_STRIP, 0, linePoints.length / 3)
-  step += 0.015
-  if (step > 1) {
-    step = 0.01
-  }
-  requestAnimationFrame(render)
-}
-
-render()
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertex), gl.STATIC_DRAW)
+gl.drawArrays(gl.POINTS, 0, vertex.length / 2)
