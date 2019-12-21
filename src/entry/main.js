@@ -90,29 +90,50 @@ gl.enableVertexAttribArray(vPosition)
 gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0)
 
 
-let step = 0.01
 let ModelViewMatrixLocation = gl.getUniformLocation(program, 'uModelViewMatrix')
 
-function render () {
-  let linePoints = []
-
-  //  曲线方程
-  //  x = u,y = 2u,z=3u
-  for (let i = step; i < step + 0.1; i += 0.01) {
-    linePoints.push(i * i * 0.9, i, 0)
+let fireworkNumber = 10
+!(function (fireworkNumber) {
+  let fireworkArray = []
+  for (let i = 0; i < fireworkNumber; i++) {
+    fireworkArray.push({
+      offsetX: Math.random() * 2 - 1,
+      offsetY: Math.random() * 1,
+      step: 0,
+      speed: Math.random() * 0.007 + 0.01
+    })
   }
-  let s = mat4.create();
-  mat4.scale(s, s, vec3.fromValues(Math.sqrt(1 - step), Math.sqrt(1 - step), 0));
 
-  gl.uniformMatrix4fv(ModelViewMatrixLocation, false, s);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(linePoints), gl.DYNAMIC_DRAW)
-  gl.clear(gl.COLOR_BUFFER_BIT)
-  gl.drawArrays(gl.LINE_STRIP, 0, linePoints.length / 3)
-  step += 0.015
-  if (step > 1) {
-    step = 0.01
+
+  function render () {
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    for (let i = 0; i < fireworkArray.length; i++) {
+      let linePoints = []
+
+      //  曲线方程
+      //  x = u,y = 2u,z=3u
+      for (let step = fireworkArray[i].step; step < fireworkArray[i].step + 0.1; step += 0.01) {
+        linePoints.push(step * step * fireworkArray[i].offsetX, step * fireworkArray[i].offsetY - 1, 0)
+      }
+      let s = mat4.create();
+      mat4.scale(s, s, vec3.fromValues(Math.sqrt(1 - fireworkArray[i].step), Math.sqrt(1 - fireworkArray[i].step), 0));
+      gl.uniformMatrix4fv(ModelViewMatrixLocation, false, s);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(linePoints), gl.DYNAMIC_DRAW)
+      //
+      gl.drawArrays(gl.LINE_STRIP, 0, linePoints.length / 3)
+      fireworkArray[i].step += fireworkArray[i].speed
+      if (fireworkArray[i].step > 1) {
+        fireworkArray[i].offsetX = Math.random() * 2 - 1
+        fireworkArray[i].step = 0
+        fireworkArray[i].offsetY = Math.random() * 2
+        fireworkArray[i].speed = Math.random() * 0.007 + 0.007
+      }
+    }
+    requestAnimationFrame(render)
   }
-  requestAnimationFrame(render)
-}
 
-render()
+  render()
+})(fireworkNumber)
+
+
+
