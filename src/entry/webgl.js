@@ -97,7 +97,7 @@ let fireworkNumber = 10
   let fireworkArray = []
   for (let i = 0; i < fireworkNumber; i++) {
     fireworkArray.push({
-      offsetX: Math.random() - 0.5,
+      offsetX: Math.random() * 2 - 1,
       offsetY: Math.random() * 1,
       step: 0,
       speed: Math.random() * 0.007 + 0.01
@@ -123,9 +123,9 @@ let fireworkNumber = 10
       gl.drawArrays(gl.LINE_STRIP, 0, linePoints.length / 3)
       fireworkArray[i].step += fireworkArray[i].speed
       if (fireworkArray[i].step > 1) {
-        fireworkArray[i].offsetX = Math.random() * 1.5 - 0.75
+        fireworkArray[i].offsetX = Math.random() * 2 - 1
         fireworkArray[i].step = 0
-        fireworkArray[i].offsetY = Math.random() * 1 + 0.5
+        fireworkArray[i].offsetY = Math.random() * 2
         fireworkArray[i].speed = Math.random() * 0.007 + 0.007
       }
     }

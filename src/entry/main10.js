@@ -11,14 +11,14 @@ function initProgram (gl) {
     void main(){
       gl_Position = vPosition;
       gl_PointSize = 1.0;
-      vColor = uModelViewMatrix * aVertexColor;
+      vColor = aVertexColor;
     }
   `
   const fragmentSource = `
     varying lowp vec4 vColor;
     precision mediump float;
     void main(){
-      gl_FragColor = vColor;
+      gl_FragColor = vec4(1,1,1,1);
     }
   `
   const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vertexSource)
@@ -92,15 +92,31 @@ gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0)
 
 let ModelViewMatrixLocation = gl.getUniformLocation(program, 'uModelViewMatrix')
 
-let fireworkNumber = 10
+let fireworkNumber = 50
 !(function (fireworkNumber) {
+  //  存放所有烟花上升的路径,默认规划1000条路径
+  let fireworkPath = [], pathNum = 100
+  for (let i = 0; i < pathNum; i++) {
+    let offsetX = (Math.random() * 2 - 1) / 10000,
+      offsetY = (Math.random() + 0.7) / 100
+    //每条路径规划100个点
+    for (let step = 1; step <= 100; step += 1) {
+      fireworkPath.push(step * step * offsetX, step * offsetY - 1, step / 100)
+    }
+  }
+
+  //  一千条路径绑定到GPU缓存
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(fireworkPath), gl.STATIC_DRAW)
+
+  let s = mat4.create()
+
   let fireworkArray = []
   for (let i = 0; i < fireworkNumber; i++) {
     fireworkArray.push({
-      offsetX: Math.random() - 0.5,
-      offsetY: Math.random() * 1,
+      //fireworkNo与规划的路径强相关，确定烟花上升那一条路径
+      fireworkNo: Math.floor(Math.random() * pathNum),
+      //当前step,最大为99
       step: 0,
-      speed: Math.random() * 0.007 + 0.01
     })
   }
 
@@ -108,25 +124,16 @@ let fireworkNumber = 10
   function render () {
     gl.clear(gl.COLOR_BUFFER_BIT)
     for (let i = 0; i < fireworkArray.length; i++) {
-      let linePoints = []
-
-      //  曲线方程
-      //  x = u,y = 2u,z=3u
-      for (let step = fireworkArray[i].step; step < fireworkArray[i].step + 0.1; step += 0.01) {
-        linePoints.push(step * step * fireworkArray[i].offsetX, step * fireworkArray[i].offsetY - 1, 0)
-      }
-      let s = mat4.create();
-      mat4.scale(s, s, vec3.fromValues(Math.sqrt(1 - fireworkArray[i].step), Math.sqrt(1 - fireworkArray[i].step), 0));
-      gl.uniformMatrix4fv(ModelViewMatrixLocation, false, s);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(linePoints), gl.DYNAMIC_DRAW)
       //
-      gl.drawArrays(gl.LINE_STRIP, 0, linePoints.length / 3)
-      fireworkArray[i].step += fireworkArray[i].speed
-      if (fireworkArray[i].step > 1) {
-        fireworkArray[i].offsetX = Math.random() * 1.5 - 0.75
+      /*let s = mat4.create();
+      mat4.scale(s, s, vec3.fromValues(Math.sqrt(1 - (fireworkArray[i].step + 9) / 100), Math.sqrt(1 - (fireworkArray[i].step + 9) / 100), 0));
+      gl.uniformMatrix4fv(ModelViewMatrixLocation, false, s);*/
+      //gl.vertexAttribPointer(aVertexColor, 4, gl.FLOAT, false, 0, 1)
+      gl.drawArrays(gl.LINE_STRIP, fireworkArray[i].fireworkNo * 100 + fireworkArray[i].step, 8)
+      fireworkArray[i].step += 1
+      if (fireworkArray[i].step >= 90) {
+        fireworkArray[i].fireworkNo = Math.floor(Math.random() * pathNum)
         fireworkArray[i].step = 0
-        fireworkArray[i].offsetY = Math.random() * 1 + 0.5
-        fireworkArray[i].speed = Math.random() * 0.007 + 0.007
       }
     }
     requestAnimationFrame(render)
