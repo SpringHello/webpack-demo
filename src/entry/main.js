@@ -17,17 +17,9 @@ function initProgram (gl) {
     attribute vec4 aVertexColor;
     varying lowp vec4 vColor;
     uniform int u_mode;
-    void clear(){
-      gl_Position = cPosition;
-      vColor = vec4(0,0,0,0.1);
-    }
     void main(){
       gl_Position = vPosition;
-      if(u_mode==1){
-        vColor = vec4(0,0,0,0.1);
-      }else{
-        vColor = vec4(1,0,0,1);
-      }
+      vColor = aVertexColor;
     }
   `
   const fragmentSource = `
@@ -66,7 +58,7 @@ const program = initProgram(gl)
 gl.useProgram(program)
 
 const vPosition = gl.getAttribLocation(program, 'vPosition')
-const u_mode = gl.getUniformLocation(program, 'u_mode')
+const aVertexColor = gl.getAttribLocation(program, 'aVertexColor')
 //  初始化四个顶点，用于清空窗口
 const linePoints = [
   -1, -1, 0,
@@ -74,10 +66,17 @@ const linePoints = [
   1, -1, 0,
   1, 1, 0
 ]
+const color = [
+  0, 0, 0, 0.1,
+  0, 0, 0, 0.1,
+  0, 0, 0, 0.1,
+  0, 0, 0, 0.1
+]
 let offsetX = (Math.random() * 2 - 1) / 10000,
   offsetY = (Math.random() + 0.7) / 100
 //规划一条路径，一条100个点
 for (let step = 1; step <= 100; step += 1) {
+  color.push(1, 1, 0, 1)
   linePoints.push(step * step * offsetX, step * offsetY - 1, 0)
 }
 
@@ -92,12 +91,16 @@ gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(linePoints), gl.STATIC_DRAW)
 gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0)
 gl.enableVertexAttribArray(vPosition)
 
+let cbuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, cbuffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(color), gl.STATIC_DRAW)
+gl.vertexAttribPointer(aVertexColor, 4, gl.FLOAT, false, 0, 0)
+gl.enableVertexAttribArray(aVertexColor)
+
 let count = 0
 
 function render () {
-  gl.uniform1i(u_mode, 1)
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-  gl.uniform1i(u_mode, 0)
+  //gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   gl.drawArrays(gl.LINES, count + 4, 2)
   count++
   if (count == 99) {
