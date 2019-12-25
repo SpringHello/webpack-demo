@@ -76,14 +76,14 @@ let offsetX = (Math.random() * 2 - 1) / 10000,
   offsetY = (Math.random() + 0.7) / 100
 //规划一条路径，一条100个点
 for (let step = 1; step <= 100; step += 1) {
-  color.push(1, 1, 0, 1)
+  color.push(1, 1, 0, 0.9)
   linePoints.push(step * step * offsetX, step * offsetY - 1, 0)
 }
 
 //颜色混合
-gl.enable(gl.BLEND);
-gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+gl.enable(gl.BLEND);
 
 let buffer = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
@@ -101,9 +101,9 @@ let count = 0
 
 function render () {
   //gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-  gl.drawArrays(gl.LINES, count + 4, 2)
+  gl.drawArrays(gl.LINES, count + 4, 4)
   count++
-  if (count == 99) {
+  if (count == 90) {
     count = 0
   }
   requestAnimationFrame(render)
