@@ -1,6 +1,14 @@
 import {mat4, vec3} from 'gl-matrix'
 
-const gl = document.getElementById('webgl').getContext('webgl')
+const canvas = document.getElementById("webgl")
+canvas.setAttribute('width', window.innerWidth
+  || document.documentElement.clientWidth
+  || document.body.clientWidth);
+canvas.setAttribute('height', window.innerHeight
+  || document.documentElement.clientHeight
+  || document.body.clientHeight);
+
+const gl = canvas.getContext('webgl')
 
 function initProgram (gl) {
   const vertexSource = `
@@ -95,7 +103,7 @@ let ModelViewMatrixLocation = gl.getUniformLocation(program, 'uModelViewMatrix')
 let fireworkNumber = 50
 !(function (fireworkNumber) {
   //  存放所有烟花上升的路径,默认规划1000条路径
-  let fireworkPath = [], pathNum = 100
+  let fireworkPath = [], pathNum = 10000
   for (let i = 0; i < pathNum; i++) {
     let offsetX = (Math.random() * 2 - 1) / 10000,
       offsetY = (Math.random() + 0.7) / 100
