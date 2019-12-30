@@ -20,16 +20,22 @@ function initProgram (gl) {
     attribute vec4 vPosition;
     attribute vec4 cPosition;
     attribute vec4 aVertexColor;
+    attribute vec4 cVertexColor;
     varying lowp vec4 vColor;
     uniform int u_mode;
+    void clear(){
+	    gl_Position = cPosition;
+      vColor = cVertexColor;
+    }
+    void draw(){
+	    gl_Position = vPosition;
+      vColor = aVertexColor;
+    }
     void main(){
-      if (u_mode>2) {
-        gl_Position = cPosition;
-        vColor = vec4(1,0,0,1);
-      }else{
-        gl_Position = vPosition;
-        vColor = aVertexColor;
-      }
+      if ( u_mode == 1 ) 
+        draw();
+      else 
+        clear();
     }
   `
   const fragmentSource = `
@@ -69,6 +75,7 @@ gl.useProgram(program)
 const vPosition = gl.getAttribLocation(program, 'vPosition')
 const cPosition = gl.getAttribLocation(program, 'cPosition')
 const aVertexColor = gl.getAttribLocation(program, 'aVertexColor')
+const cVertexColor = gl.getAttribLocation(program, 'cVertexColor')
 const u_mode = gl.getUniformLocation(program, 'u_mode')
 //  初始化四个顶点，用于清空窗口
 const fireworkPath = [
@@ -84,9 +91,15 @@ const color = [
   0, 0, 0, 0.2,
   0, 0, 0, 0.2
 ]
+const boomColor = [
+  1, 0, 0, 1,
+  1, 0, 0, 1,
+  1, 0, 0, 1,
+  1, 0, 0, 1
+]
 
 //  存放所有烟花上升的路径,默认规划1000条路径
-let pathNum = 10000
+let pathNum = 180
 for (let i = 0; i < pathNum; i++) {
   let offsetX = (Math.random() * 2 - 1) / 10000,
     offsetY = (Math.random() + 0.7) / 100
@@ -94,19 +107,20 @@ for (let i = 0; i < pathNum; i++) {
   let count = 0
   for (let step = 1; step <= 100; step += 1) {
     count++
-    color.push((120 - step) / 100, (120 - step) / 100, (120 - step) / 100, 1)
-    fireworkPath.push(step * step * offsetX, step * offsetY - 1, -0.5)
+    color.push((120 - step) / 100, (120 - step) / 100, 0, 1)
+    fireworkPath.push(step * step * offsetX, step * offsetY - 1, 0)
   }
 }
-for (let i = 0; i < 360; i += 30) {
+let pre = 1
+for (let i = 0; i < 360; i += pre) {
   let x = Math.cos((i / 180) * Math.PI)
   let y = Math.sin((i / 180) * Math.PI)
   //  爆炸路径上一共一百个点
   for (let j = 2; j < 52; j++) {
     boomPath.push(x * j / 50, y * j / 50, 0)
+    boomColor.push(1, 0, 0, 1)
   }
 }
-
 //颜色混合
 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 gl.enable(gl.BLEND);
@@ -132,6 +146,12 @@ gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(color), gl.STATIC_DRAW)
 gl.vertexAttribPointer(aVertexColor, 4, gl.FLOAT, false, 0, 0)
 gl.enableVertexAttribArray(aVertexColor)
 
+//  爆炸颜色
+let abuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, abuffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(boomColor), gl.STATIC_DRAW)
+gl.vertexAttribPointer(cVertexColor, 4, gl.FLOAT, false, 0, 0)
+gl.enableVertexAttribArray(cVertexColor)
 
 !(function (fireworkNum) {
   //  烟花上升的数组
@@ -151,9 +171,12 @@ gl.enableVertexAttribArray(aVertexColor)
   let x = width / 2 - boomRadus;
   let y = height / 2 - boomRadus
 
+  let status = 0
+
   function render () {
     //gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0)
-    gl.uniform1i(u_mode, 0)
+
+    gl.uniform1i(u_mode, 1)
     gl.viewport(0, 0, width, height)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     for (let i = 0; i < fireworkArray.length; i++) {
@@ -175,26 +198,26 @@ gl.enableVertexAttribArray(aVertexColor)
       }
       currentFirework.step++
     }
-    gl.uniform1i(u_mode, 3)
+
+    gl.uniform1i(u_mode, 0)
     //alert(gl.getUniform(program, u_mode))
     for (let j = 0; j < fireworkBoomArray.length; j++) {
       let currentFireworkBoom = fireworkBoomArray[j]
 
       gl.viewport(currentFireworkBoom.location.x * width / 2 + x, currentFireworkBoom.location.y * height / 2 + y, boomRadus * 2, boomRadus * 2)
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 360; i += 20) {
         gl.drawArrays(gl.LINES, i * 50 + currentFireworkBoom.step, 2)
       }
       currentFireworkBoom.step++
     }
     fireworkBoomArray = fireworkBoomArray.filter(firework => {
-      return firework.step < 49
+      return firework.step < 40
     })
     requestAnimationFrame(render)
   }
 
   render()
 })(5)
-
 
 
 
