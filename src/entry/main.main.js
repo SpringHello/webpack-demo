@@ -91,10 +91,15 @@ const color = [
   0, 0, 0, 0.2,
   0, 0, 0, 0.2
 ]
-const boomColor = []
+const boomColor = [
+  1, 0, 0, 1,
+  1, 0, 0, 1,
+  1, 0, 0, 1,
+  1, 0, 0, 1
+]
 
 //  存放所有烟花上升的路径,默认规划1000条路径
-let pathNum = 300
+let pathNum = 180
 for (let i = 0; i < pathNum; i++) {
   let offsetX = (Math.random() * 2 - 1) / 10000,
     offsetY = (Math.random() + 0.7) / 100
@@ -106,41 +111,7 @@ for (let i = 0; i < pathNum; i++) {
     fireworkPath.push(step * step * offsetX, step * offsetY - 1, 0)
   }
 }
-
-let boomPointNum = 500
-let count = 0
-while (count < boomPointNum) {
-  let u = Math.random() * 2 - 1
-  let v = Math.random() * 2 - 1
-  let r2 = u * u + v * v
-  if (r2 < 1) {
-    count++
-    let x = 2 * u * Math.sqrt(1 - r2), y = 2 * v * Math.sqrt(1 - r2), z = 1 - 2 * r2
-    boomPath.push([x, y, z])
-    /*for (let i = 1; i <= 50; i++) {
-      let precent = i / 50
-      boomPath.push(x * precent, y * precent, z * precent)
-    }*/
-  }
-}
-let array = []
-let colorList = [
-  [1, 0, 0, 1],
-  [0, 1, 0, 1],
-  [0, 0, 1, 1]
-]
-for (let i = 1; i <= 50; i++) {
-  let beforePrecent = Math.sqrt(i / 50)
-  let afterPrecent = Math.sqrt((i + 1) / 50)
-  for (let j = 0; j < boomPath.length; j++) {
-    let x = boomPath[j][0], y = boomPath[j][1], z = boomPath[j][2]
-    array.push(beforePrecent * x, beforePrecent * y, beforePrecent * z)
-    array.push(afterPrecent * x, afterPrecent * y, afterPrecent * z)
-    boomColor.push(...colorList[j % colorList.length])
-    boomColor.push(...colorList[j % colorList.length])
-  }
-}
-/*let pre = 1
+let pre = 1
 for (let i = 0; i < 360; i += pre) {
   let x = Math.cos((i / 180) * Math.PI)
   let y = Math.sin((i / 180) * Math.PI)
@@ -149,7 +120,7 @@ for (let i = 0; i < 360; i += pre) {
     boomPath.push(x * j / 50, y * j / 50, 0)
     boomColor.push(1, 0, 0, 1)
   }
-}*/
+}
 //颜色混合
 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 gl.enable(gl.BLEND);
@@ -164,7 +135,7 @@ gl.enableVertexAttribArray(vPosition)
 //  爆炸轨迹
 let vbuffer = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer)
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(array), gl.STATIC_DRAW)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(boomPath), gl.STATIC_DRAW)
 gl.vertexAttribPointer(cPosition, 3, gl.FLOAT, false, 0, 0)
 gl.enableVertexAttribArray(cPosition)
 
@@ -195,7 +166,7 @@ gl.enableVertexAttribArray(cVertexColor)
       }
     )
   }
-  const boomRadus = 200;
+  const boomRadus = 100;
   // 0,0 对应的点位
   let x = width / 2 - boomRadus;
   let y = height / 2 - boomRadus
@@ -204,6 +175,7 @@ gl.enableVertexAttribArray(cVertexColor)
 
   function render () {
     //gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0)
+
     gl.uniform1i(u_mode, 1)
     gl.viewport(0, 0, width, height)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
@@ -226,12 +198,16 @@ gl.enableVertexAttribArray(cVertexColor)
       }
       currentFirework.step++
     }
+
     gl.uniform1i(u_mode, 0)
     //alert(gl.getUniform(program, u_mode))
     for (let j = 0; j < fireworkBoomArray.length; j++) {
       let currentFireworkBoom = fireworkBoomArray[j]
+
       gl.viewport(currentFireworkBoom.location.x * width / 2 + x, currentFireworkBoom.location.y * height / 2 + y, boomRadus * 2, boomRadus * 2)
-      gl.drawArrays(gl.LINES, boomPointNum * currentFireworkBoom.step, boomPointNum * 2)
+      for (let i = 0; i < 360; i += 20) {
+        gl.drawArrays(gl.LINES, i * 50 + currentFireworkBoom.step, 2)
+      }
       currentFireworkBoom.step++
     }
     fireworkBoomArray = fireworkBoomArray.filter(firework => {
@@ -241,7 +217,7 @@ gl.enableVertexAttribArray(cVertexColor)
   }
 
   render()
-})(5)
+})(20)
 
 
 
