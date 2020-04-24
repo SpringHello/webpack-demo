@@ -11,12 +11,11 @@ module.exports = {
     contentBase: path.join(__dirname, "src/assets"),
     compress: true,
     host: "0.0.0.0",
-    port: 8088
+    port: 80
   },
   module: {
     rules: []
-  }
-  ,
+  },
   plugins: [
     new HtmlWebpackPlugin({
       name: 'index',
@@ -25,5 +24,4 @@ module.exports = {
       template: path.join(__dirname, './src/index.html')
     })
   ]
-
 }
