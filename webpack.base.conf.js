@@ -2,7 +2,7 @@ const path = require("path")
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   mode: 'development',
-  entry: path.resolve(__dirname, './src/entry/main.js'),
+  entry: path.resolve(__dirname, './src/entry/three.js'),
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'my-first-webpack.bundle.js'
@@ -11,7 +11,7 @@ module.exports = {
     contentBase: path.join(__dirname, "src/assets"),
     compress: true,
     host: "0.0.0.0",
-    port: 8088
+    port: 9000
   },
   module: {
     rules: []

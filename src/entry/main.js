@@ -19,26 +19,33 @@ void main(){
     vec3 c = cos(angles);
     mat4 x = mat4(
         1.0,0.0,0.0,0.0,
-        0.0,c.x,-s.x,0.0,
-        0.0,s.x,c.x,0.0,
+        0.0,c.x,s.x,0.0,
+        0.0,-s.x,c.x,0.0,
         0.0,0.0,0.0,1.0
     );
 
     mat4 y = mat4(
-        c.y,0.0,s.y,0.0,
+        c.y,0.0,-s.y,0.0,
         0.0,1.0,0.0,0.0,
-        -s.y,0.0,c.y,0.0,
+        s.y,0.0,c.y,0.0,
         0.0,0.0,0.0,1.0
     );
 
     mat4 z = mat4(
-        c.z,-s.z,0.0,0.0,
-        s.z,c.z,0.0,0.0,
+        c.z,s.z,0.0,0.0,
+        -s.z,c.z,0.0,0.0,
+        0.0,0.0,1.0,0.0,
+        0.0,0.0,0.0,1.0
+    );
+    mat4 t = mat4(
+        1.0,0.0,0.0,0.0,
+        0.0,1.0,0.0,0.0,
         0.0,0.0,1.0,0.0,
         0.0,0.0,0.0,1.0
     );
     fColor = vColor;
-    gl_Position = z * y * x * vPosition;
+    mat4 project = t * y * z * x;
+    gl_Position = project * vPosition;
 }
 `
     const FRAGMENT_SOURCE = `
@@ -72,11 +79,11 @@ void main(){
     ]
     const colors = []
 
-    const theta = [0, 45, 0]
+    const theta = [0, 0, 0]
     const xAxis = 0
     const yAxis = 1
     const zAxis = 2
-    let axis = xAxis
+    let axis = yAxis
     for (let i = 0; i < pointIndex.length; i++) {
         quad(...pointIndex[i], faceColors[i])
     }
