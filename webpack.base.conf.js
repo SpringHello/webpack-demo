@@ -11,7 +11,7 @@ module.exports = {
     contentBase: path.join(__dirname, "src/assets"),
     compress: true,
     host: "0.0.0.0",
-    port: 9000
+    port: 9090
   },
   module: {
     rules: []
